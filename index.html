@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スマホ撮影するだけ！感熱紙レシート退色防止ファイリングシミュレーター</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        header p {
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        /* 撮影シミュレーター部分 */
+        .camera-box {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            background: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-box input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: var(--text);
+        }
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        #preview-container {
+            margin-top: 15px;
+            width: 100%;
+            max-height: 300px;
+            display: none;
+            position: relative;
+        }
+
+        #preview-img {
+            max-width: 100%;
+            max-height: 250px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .receipt-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+
+        /* フォーム要素 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .radio-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+
+        .radio-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            background: white;
+        }
+
+        .radio-card input {
+            display: none;
+        }
+
+        .radio-card.selected {
+            border-color: var(--primary);
+            background: #eff6ff;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        /* 診断結果エリア */
+        .result-box {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid #bfdbfe;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .risk-meter {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .risk-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .risk-high { background: var(--danger); }
+        .risk-mid { background: var(--warning); }
+        .risk-low { background: var(--accent); }
+
+        .recommendation-list {
+            list-style: none;
+        }
+
+        .recommendation-list li {
+            margin-bottom: 10px;
+            padding-left: 24px;
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .recommendation-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* 履歴・保存一覧 */
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            vertical-align: middle;
+        }
+
+        @media (min-width: 640px) {
+            header h1 { font-size: 1.8rem; }
+            body { padding: 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>
+            <svg class="icon" viewBox="0 0 24 24" style="width:32px;height:32px;"><path d="M4 6H20V18H4V6ZM2 4C1.44772 4 1 4.44772 1 5V19C1 19.5523 1.44772 20 2 20H22C22.5523 20 23 19.5523 23 19V5C23 4.44772 22.5523 4 22 4H2CZM11 8H13V10H11V8ZM11 11H13V16H11V11ZM7 8H9V10H7V8ZM7 11H9V16H7V11ZM15 8H17V10H15V8ZM15 11H17V16H15V11Z"/></svg>
+            レシート退色防止シミュレーター
+        </h1>
+        <p>スマホ撮影 ＋ 最適なファイリング・デジタル管理で、感熱紙の文字消えを完全にブロック！</p>
+    </header>
+
+    <!-- ステップ1: 撮影・アップロード -->
+    <div class="card">
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M4 5C3.44772 5 3 5.44772 3 6V18C3 18.5523 3.44772 19 4 19H20C20.5523 19 21 18.5523 21 18V6C21 5.44772 20.5523 5 20 5H4ZM12 8C14.2091 8 16 9.79086 16 12C16 14.2091 14.2091 16 12 16C9.79086 16 8 14.2091 8 12C8 9.79086 9.79086 8 12 8ZM12 10C10.8954 10 10 10.8954 10 12C10 13.1046 10.8954 14 12 14C13.1046 14 14 13.1046 14 12C14 10.8954 13.1046 10 12 10Z"/></svg>
+            Step 1. レシートを撮影（または画像選択）
+        </h2>
+        <div class="camera-box" id="drop-zone">
+            <svg class="icon" style="width:48px;height:48px;color:var(--text-light);margin-bottom:8px;" viewBox="0 0 24 24"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15ZM12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12C17 14.7614 14.7614 17 12 17ZM18 4H20C21.1046 4 22 4.89543 22 6V18C22 19.1046 21.1046 20 20 20H4C2.89543 20 2 19.1046 2 18V6C2 4.89543 2.89543 4 4 4H6L7.5 2H16.5L18 4Z"/></svg>
+            <p style="margin-bottom: 12px; color: var(--text-light);">スマホのカメラで撮影、または画像をここにドロップ</p>
+            <button class="btn" onclick="document.getElementById('receipt-input').click()">
+                画像を選択 / 撮影
+            </button>
+            <input type="file" id="receipt-input" accept="image/*" capture="environment">
+            
+            <div id="preview-container">
+                <img id="preview-img" alt="レシートプレビュー">
+                <div class="receipt-overlay" id="img-meta">取得中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ステップ2: 保存環境の入力 -->
+    <div class="card">
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/></svg>
+            Step 2. 保管・管理環境の選択
+        </h2>
+        
+        <div class="form-group">
+            <label>1. レシートの主な用途・目的</label>
+            <select id="receipt-purpose">
+                <option value="tax">確定申告・経費精算（7年間保存必要）</option>
+                <option value="warranty">家電・高額商品の保証書代わり</option>
+                <option value="household">家計簿・一時的な確認用</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>2. 現在の物理的保管場所</label>
+            <div class="radio-group" id="storage-type">
+                <label class="radio-card selected">
+                    <input type="radio" name="storage" value="desk" checked> 封筒・引き出し<br><small>（光は当たらず）</small>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="storage" value="wallet"> 財布・手帳<br><small>（摩擦・熱あり）</small>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="storage" value="sunny"> 机の上・窓際<br><small>（直射日光・高温）</small>
+                </label>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>3. デジタルバックアップの有無</label>
+            <div class="radio-group" id="digital-type">
+                <label class="radio-card selected">
+                    <input type="radio" name="digital" value="none" checked> まだしていない<br><small>（紙のみ）</small>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="digital" value="photo"> スマホの写真フォルダのみ<br><small>（埋もれがち）</small>
+                </label>
+                <label class="radio-card">
+                    <input type="radio" name="digital" value="cloud"> クラウド・家計簿アプリ<br><small>（完璧）</small>
+                </label>
+            </div>
+        </div>
+
+        <button class="btn" style="width:100%; justify-content:center;" id="simulate-btn">最適プランをシミュレーションする</button>
+    </div>
+
+    <!-- ステップ3: 診断結果 -->
+    <div class="card" id="result-card" style="display: none;">
+        <h2>
+            <svg class="icon" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+            Step 3. 退色リスク＆最適ファイリング提案
+        </h2>
+
+        <div class="result-box">
+            <div class="risk-meter">
+                <div>退色危険度:</div>
+                <div id="risk-badge" class="risk-badge risk-high">高（数ヶ月で消える可能性）</div>
+            </div>
+
+            <p id="risk-description" style="margin-bottom: 15px; font-weight: 500;"></p>
+
+            <h3 style="font-size: 1rem; margin-bottom: 10px; color: var(--primary-dark);">推奨する対策アクション</h3>
+            <ul class="recommendation-list" id="recommendation-list">
+                <!-- JSで動的生成 -->
+            </ul>
+        </div>
+
+        <div class="actions">
+            <button class="btn" id="save-history-btn">この設定をブラウザに保存</button>
+            <button class="btn btn-secondary" id="reset-btn">リセット</button>
+        </div>
+    </div>
+
+    <!-- 保存されたシミュレーション履歴 -->
+    <div class="card" id="history-card" style="display: none;">
+        <h2>保存されたシミュレーション履歴</h2>
+        <div class="history-section" id="history-list">
+            <!-- 履歴がここに入る -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // ラジオボタンのUI切り替え制御
+    document.querySelectorAll('.radio-group').forEach(group => {
+        const cards = group.querySelectorAll('.radio-card');
+        cards.forEach(card => {
+            card.addEventListener('click', () => {
+                cards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                card.querySelector('input').checked = true;
+            });
+        });
+    });
+
+    // 画像プレビュー処理
+    const receiptInput = document.getElementById('receipt-input');
+    const previewContainer = document.getElementById('preview-container');
+    const previewImg = document.getElementById('preview-img');
+    const imgMeta = document.getElementById('img-meta');
+
+    receiptInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                previewContainer.style.display = 'block';
+                const sizeKb = Math.round(file.size / 1024);
+                imgMeta.textContent = `${file.name} (${sizeKb} KB)`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // シミュレーション実行
+    document.getElementById('simulate-btn').addEventListener('click', () => {
+        const purpose = document.getElementById('receipt-purpose').value;
+        const storage = document.querySelector('input[name="storage"]:checked').value;
+        const digital = document.querySelector('input[name="digital"]:checked').value;
+
+        const resultCard = document.getElementById('result-card');
+        const riskBadge = document.getElementById('risk-badge');
+        const riskDesc = document.getElementById('risk-description');
+        const recList = document.getElementById('recommendation-list');
+
+        resultCard.style.display = 'block';
+        resultCard.scrollIntoView({ behavior: 'smooth' });
+
+        // ロジック構築
+        let riskLevel = 'low';
+        let descText = '';
+        let recommendations = [];
+
+        // 判定ロジック
+        if (storage === 'sunny' || (storage === 'wallet' && purpose === 'tax')) {
+            riskLevel = 'high';
+            riskDesc.textContent = '熱や光、または摩擦により、早ければ1〜3ヶ月で印字が完全に消失する危険性があります！';
+        } else if (storage === 'wallet' || digital === 'none') {
+            riskLevel = 'mid';
+            riskDesc.textContent = '半年〜1年程度で徐々に薄くなる可能性があります。長期保存には不十分です。';
+        } else {
+            riskLevel = 'low';
+            riskDesc.textContent = '現時点の保管環境は比較的良好ですが、感熱紙の性質上、数年単位の経年劣化は避けられません。';
+        }
+
+        // バッジの見た目変更
+        riskBadge.className = 'risk-badge';
+        if (riskLevel === 'high') {
+            riskBadge.classList.add('risk-high');
+            riskBadge.textContent = '高リスク（消滅寸前）';
+        } else if (riskLevel === 'mid') {
+            riskBadge.classList.add('risk-mid');
+            riskBadge.textContent = '中リスク（注意が必要）';
+        } else {
+            riskBadge.classList.add('risk-low');
+            riskBadge.textContent = '低リスク（良好）';
+        }
+
+        // 推奨アクション生成
+        recommendations.push('スマホ撮影時に「影」や「ピンぼけ」がないか確認し、アプリやクラウドへ即時アップロードする。');
+        
+        if (purpose === 'tax') {
+            recommendations.push('【重要】電子帳簿保存法の要件を満たすため、クラウドストレージ（Googleドライブ等）に「日付・金額・宛先」をファイル名にして保存。');
+        } else {
+            recommendations.push('カテゴリ別（光熱費、食費など）のフォルダにデジタル仕分けしてスマホ内検索性を向上させる。');
+        }
+
+        if (storage !== 'desk') {
+            recommendations.push('物理レシートは直射日光や高温多湿を避け、暗所のファイルや封筒へ速やかに移し替える。');
+        } else {
+            recommendations.push('物理レシートはコクヨなどの「A4レシートホルダー」に挟んでファイリングすると省スペース＆折れ防止に。');
+        }
+
+        recommendations.push('数ヶ月に一度、デジタル化されたデータと現物の状態を照合するルーティンを作る。');
+
+        // リスト描画
+        recList.innerHTML = '';
+        recommendations.forEach(rec => {
+            const li = document.createElement('li');
+            li.textContent = rec;
+            recList.appendChild(li);
+        });
+    });
+
+    // LocalStorageへの保存
+    document.getElementById('save-history-btn').addEventListener('click', () => {
+        const purpose = document.getElementById('receipt-purpose').value;
+        const storage = document.querySelector('input[name="storage"]:checked').value;
+        const digital = document.querySelector('input[name="digital"]:checked').value;
+        
+        const historyData = {
+            date: new Date().toLocaleDateString('ja-JP'),
+            purpose,
+            storage,
+            digital
+        };
+
+        let histories = JSON.parse(localStorage.getItem('receipt_sim_histories') || '[]');
+        histories.unshift(historyData);
+        if (histories > 5) histories.pop(); // 最大5件
+        localStorage.setItem('receipt_sim_histories', JSON.stringify(histories));
+
+        alert('シミュレーション設定をブラウザに保存しました！');
+        loadHistories();
+    });
+
+    // 履歴のロード
+    function loadHistories() {
+        const histories = JSON.parse(localStorage.getItem('receipt_sim_histories') || '[]');
+        const historyCard = document.getElementById('history-card');
+        const historyList = document.getElementById('history-list');
+
+        if (histories.length > 0) {
+            historyCard.style.display = 'block';
+            historyList.innerHTML = '';
+            
+            const purposeMap = { tax: '確定申告・経費', warranty: '保証書', household: '家計簿' };
+            const storageMap = { desk: '封筒・引き出し', wallet: '財布・手帳', sunny: '直射日光・机上' };
+
+            histories.forEach(h => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div>
+                        <strong>${h.date} 診断</strong><br>
+                        <span style="color:var(--text-light); font-size:0.8rem;">目的: ${purposeMap[h.purpose]} / 保管: ${storageMap[h.storage]}</span>
+                    </div>
+                    <span class="badge">保存済み</span>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+    }
+
+    // リセットボタン
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        document.getElementById('result-card').style.display = 'none';
+        document.getElementById('preview-container').style.display = 'none';
+        document.getElementById('receipt-input').value = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // 初期読み込み
+    loadHistories();
+</script>
+
+</body>
+</html>
